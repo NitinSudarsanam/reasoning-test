@@ -17,3 +17,4 @@ protobuf>=3.20.0
 # Optional: For API-based problem generation
 openai>=1.0.0  # For GPT-4 problem generation
 anthropic>=0.18.0  # For Claude problem generation
+groq>=0.4.0  # For FREE Llama 3.1 70B problem generation

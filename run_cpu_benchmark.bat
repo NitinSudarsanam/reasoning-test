@@ -40,17 +40,27 @@ echo ==========================================
 echo.
 echo Choose problem generation method:
 echo   1. Use pre-made problems (instant, good quality)
-echo   2. Generate with GPT-4 API (best quality, requires API key)
-echo   3. Generate with Claude API (excellent quality, requires API key)
+echo   2. Generate with Groq API (FREE, excellent quality) - RECOMMENDED
+echo   3. Generate with GPT-4 API (best quality, requires paid API key)
+echo   4. Generate with Claude API (excellent quality, requires paid API key)
 echo.
-set /p CHOICE="Enter choice (1-3, default=1): "
-if "%CHOICE%"=="" set CHOICE=1
+set /p CHOICE="Enter choice (1-4, default=2): "
+if "%CHOICE%"=="" set CHOICE=2
 
 if "%CHOICE%"=="1" (
     echo Using pre-made custom problems...
     python generate_custom_problems.py
     if errorlevel 1 goto error
 ) else if "%CHOICE%"=="2" (
+    echo Generating with Groq API (FREE)...
+    echo Get free key at: https://console.groq.com/
+    echo Make sure GROQ_API_KEY is set in your environment
+    python generate_problems_api.py --provider groq --num-problems 5
+    if errorlevel 1 (
+        echo Failed to generate with API, falling back to pre-made problems
+        python generate_custom_problems.py
+    )
+) else if "%CHOICE%"=="3" (
     echo Generating with GPT-4 API...
     echo Make sure OPENAI_API_KEY is set in your environment
     python generate_problems_api.py --provider openai --num-problems 5
@@ -58,7 +68,7 @@ if "%CHOICE%"=="1" (
         echo Failed to generate with API, falling back to pre-made problems
         python generate_custom_problems.py
     )
-) else if "%CHOICE%"=="3" (
+) else if "%CHOICE%"=="4" (
     echo Generating with Claude API...
     echo Make sure ANTHROPIC_API_KEY is set in your environment
     python generate_problems_api.py --provider anthropic --num-problems 5

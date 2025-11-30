@@ -11,7 +11,7 @@ def generate_problem_with_openai(
     client,
     difficulty: str,
     topic: str,
-    model: str = "gpt-4"
+    model: str = "gpt-3.5-turbo"
 ) -> Dict:
     """Generate a problem using OpenAI API.
     
@@ -19,7 +19,7 @@ def generate_problem_with_openai(
         client: OpenAI client instance
         difficulty: Problem difficulty (easy/medium/hard)
         topic: Problem topic/domain
-        model: Model to use (gpt-4, gpt-3.5-turbo, etc.)
+        model: Model to use (gpt-3.5-turbo, gpt-3.5-turbo, etc.)
         
     Returns:
         Dictionary with problem details
@@ -189,6 +189,70 @@ def parse_generated_problem(text: str) -> Dict:
     return problem
 
 
+def generate_problem_with_groq(
+    client,
+    difficulty: str,
+    topic: str,
+    model: str = "llama-3.3-70b-versatile"
+) -> Dict:
+    """Generate a problem using Groq API (free).
+    
+    Args:
+        client: Groq client instance
+        difficulty: Problem difficulty (easy/medium/hard)
+        topic: Problem topic/domain
+        model: Model to use
+        
+    Returns:
+        Dictionary with problem details
+    """
+    
+    prompt = f"""Generate a novel coding problem that is unlikely to appear in standard coding interview datasets.
+
+Requirements:
+- Difficulty: {difficulty}
+- Topic: {topic}
+- Must be a unique variation or combination of concepts
+- Avoid common LeetCode/HackerRank patterns
+
+Provide the following in this EXACT format:
+
+PROBLEM_ID: <snake_case_id>
+
+DESCRIPTION:
+<2-3 sentence clear problem description>
+
+SIGNATURE:
+<Python function signature with type hints>
+
+TESTS:
+<5 test cases as Python assert statements, one per line>
+
+SOLUTION:
+```python
+<complete working Python solution>
+```
+
+Make the problem interesting and include edge cases in tests."""
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are an expert at creating novel coding problems."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.8,
+        max_tokens=1500
+    )
+    
+    generated_text = response.choices[0].message.content
+    problem = parse_generated_problem(generated_text)
+    problem['difficulty'] = difficulty
+    problem['tags'] = [topic]
+    
+    return problem
+
+
 def generate_problem_set(
     provider: str = "openai",
     model: Optional[str] = None,
@@ -198,7 +262,7 @@ def generate_problem_set(
     """Generate a set of problems using an API.
     
     Args:
-        provider: API provider (openai or anthropic)
+        provider: API provider (openai, anthropic, or groq)
         model: Model name (optional, uses defaults)
         num_problems: Number of problems to generate
         api_key: API key (optional, reads from env)
@@ -226,7 +290,7 @@ def generate_problem_set(
             return []
         
         client = OpenAI(api_key=api_key)
-        model = model or "gpt-4"
+        model = model or "gpt-3.5-turbo"
         
     elif provider == "anthropic":
         try:
@@ -245,9 +309,27 @@ def generate_problem_set(
         client = Anthropic(api_key=api_key)
         model = model or "claude-3-5-sonnet-20241022"
     
+    elif provider == "groq":
+        try:
+            from groq import Groq
+        except ImportError:
+            print("Error: groq package not installed")
+            print("Install with: pip install groq")
+            return []
+        
+        api_key = api_key or os.getenv("GROQ_API_KEY")
+        if not api_key:
+            print("Error: GROQ_API_KEY not found in environment")
+            print("Get free key at: https://console.groq.com/")
+            print("Set it with: export GROQ_API_KEY='your-key'")
+            return []
+        
+        client = Groq(api_key=api_key)
+        model = model or "llama-3.3-70b-versatile"
+    
     else:
         print(f"Error: Unknown provider '{provider}'")
-        print("Supported: openai, anthropic")
+        print("Supported: openai, anthropic, groq")
         return []
     
     print(f"Using model: {model}")
@@ -272,8 +354,10 @@ def generate_problem_set(
         try:
             if provider == "openai":
                 problem = generate_problem_with_openai(client, difficulty, topic, model)
-            else:
+            elif provider == "anthropic":
                 problem = generate_problem_with_anthropic(client, difficulty, topic, model)
+            else:  # groq
+                problem = generate_problem_with_groq(client, difficulty, topic, model)
             
             problems.append(problem)
             print(f"  ✓ Generated: {problem['id']}")
@@ -296,14 +380,14 @@ def main():
     parser.add_argument(
         '--provider',
         type=str,
-        default="openai",
-        choices=["openai", "anthropic"],
-        help="API provider to use"
+        default="groq",
+        choices=["openai", "anthropic", "groq"],
+        help="API provider to use (groq is FREE!)"
     )
     parser.add_argument(
         '--model',
         type=str,
-        help="Model name (default: gpt-4 for OpenAI, claude-3-5-sonnet for Anthropic)"
+        help="Model name (default: llama-3.3-70b-versatile for Groq, gpt-4 for OpenAI, claude-3-5-sonnet for Anthropic)"
     )
     parser.add_argument(
         '--num-problems',

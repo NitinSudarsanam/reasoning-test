@@ -1,0 +1,89 @@
+{
+  "problems": [
+    {
+      "id": "alternating_sum_inversion",
+      "description": "Given an array of integers and a target sum, find the maximum length of a subarray that can be obtained by alternating between adding and subtracting elements from the array, such that the sum of the subarray is equal to the target sum. The array can be traversed in both forward and backward directions. \nThe goal is to find the longest subarray with the target sum by alternating between addition and subtraction.",
+      "function_signature": "def alternating_sum_inversion(arr: list[int], target_sum: int) -> int:",
+      "baseline_tests": [
+        "assert alternating_sum_inversion([1, 2, 3, 4, 5], 3) == 3",
+        "assert alternating_sum_inversion([-1, -2, -3, -4, -5], -3) == 3",
+        "assert alternating_sum_inversion([1, -1, 1, -1, 1], 0) == 5",
+        "assert alternating_sum_inversion([10, 20, 30, 40, 50], 60) == 2",
+        "assert alternating_sum_inversion([], 10) == 0"
+      ],
+      "reference_solution": "def alternating_sum_inversion(arr: list[int], target_sum: int) -> int:\n    \"\"\"\n    This function calculates the maximum length of a subarray that can be obtained by \n    alternating between adding and subtracting elements from the array, such that \n    the sum of the subarray is equal to the target sum.\n\n    Args:\n        arr (list[int]): The input array of integers.\n        target_sum (int): The target sum.\n\n    Returns:\n        int: The maximum length of the subarray with the target sum.\n    \"\"\"\n    if not arr:\n        return 0\n\n    max_length = 0\n    for i in range(len(arr)):\n        for j in range(i, len(arr)):\n            current_sum = 0\n            # Initialize the sign as 1 for addition\n            sign = 1\n            for k in range(i, j + 1):\n                current_sum += sign * arr[k]\n                # Alternate the sign\n                sign *= -1\n            if current_sum == target_sum:\n                max_length = max(max_length, j - i + 1)\n\n    # Check for the reverse direction\n    arr = arr[::-1]\n    for i in range(len(arr)):\n        for j in range(i, len(arr)):\n            current_sum = 0\n            sign = 1\n            for k in range(i, j + 1):\n                current_sum += sign * arr[k]\n                sign *= -1\n            if current_sum == target_sum:\n                max_length = max(max_length, j - i + 1)\n\n    return max_length",
+      "difficulty": "easy",
+      "tags": [
+        "array manipulation"
+      ]
+    },
+    {
+      "id": "string_window_repeats",
+      "description": "Given a string and a window size, find the maximum number of repeated substrings within a sliding window of that size. The string is considered as a circular sequence, meaning the window can wrap around to the beginning of the string. The repeated substrings must be non-overlapping within the window.\nThe function should return the maximum number of repeated substrings for any window of the given size.",
+      "function_signature": "```python\ndef string_window_repeats(s: str, window_size: int) -> int\n```",
+      "baseline_tests": [
+        "assert string_window_repeats(\"abcabc\", 6) == 2",
+        "assert string_window_repeats(\"aaaaaa\", 3) == 2",
+        "assert string_window_repeats(\"abcdef\", 3) == 1",
+        "assert string_window_repeats(\"ababab\", 4) == 1",
+        "assert string_window_repeats(\"\", 5) == 1"
+      ],
+      "reference_solution": "def string_window_repeats(s: str, window_size: int) -> int:\n    \"\"\"\n    This function calculates the maximum number of repeated substrings within a sliding window of a given size.\n    \n    Args:\n        s (str): The input string.\n        window_size (int): The size of the sliding window.\n    \n    Returns:\n        int: The maximum number of repeated substrings for any window of the given size.\n    \"\"\"\n    \n    if not s or window_size <= 0:\n        return 1\n    \n    max_repeats = 0\n    s += s  # Consider the string as a circular sequence\n    \n    for i in range(len(s) - window_size + 1):\n        window = s[i:i + window_size]\n        \n        # Initialize a dictionary to store the frequency of substrings\n        freq_dict = {}\n        \n        # Initialize the maximum length of repeated substrings\n        max_len = window_size // 2\n        \n        for length in range(1, max_len + 1):\n            for j in range(len(window) - length + 1):\n                substring = window[j:j + length]\n                \n                # If the substring is already in the dictionary, increment its count\n                if substring in freq_dict:\n                    freq_dict[substring] += 1\n                # Otherwise, add it to the dictionary with a count of 1\n                else:\n                    freq_dict[substring] = 1\n        \n        # Update the maximum number of repeated substrings\n        max_repeats = max(max_repeats, max(freq_dict.values(), default=1))\n    \n    return max_repeats",
+      "difficulty": "easy",
+      "tags": [
+        "string processing"
+      ]
+    },
+    {
+      "id": "merge_overlapping_intervals_with_custom_weight",
+      "description": "Given a list of intervals with custom weights, merge overlapping intervals and update their weights by taking the maximum weight of the overlapping intervals. The intervals are defined as tuples of two integers representing the start and end points, and the weights are integers. The goal is to return the merged intervals with their updated weights.",
+      "function_signature": "```python\ndef merge_overlapping_intervals(intervals: list[tuple[int, int]], weights: list[int]) -> list[tuple[tuple[int, int], int]]:\n```",
+      "baseline_tests": [
+        "assert merge_overlapping_intervals([(1, 3), (2, 4), (5, 7)], [1, 2, 3]) == [((1, 4), 2), ((5, 7), 3)]",
+        "assert merge_overlapping_intervals([(1, 2), (3, 4), (5, 6)], [1, 2, 3]) == [((1, 2), 1), ((3, 4), 2), ((5, 6), 3)]",
+        "assert merge_overlapping_intervals([(1, 10), (2, 5), (6, 8)], [1, 2, 3]) == [((1, 10), 2)]",
+        "assert merge_overlapping_intervals([(1, 1), (2, 2), (3, 3)], [1, 2, 3]) == [((1, 1), 1), ((2, 2), 2), ((3, 3), 3)]",
+        "assert merge_overlapping_intervals([], []) == []"
+      ],
+      "reference_solution": "def merge_overlapping_intervals(intervals: list[tuple[int, int]], weights: list[int]) -> list[tuple[tuple[int, int], int]]:\n    \"\"\"\n    Merge overlapping intervals and update their weights by taking the maximum weight of the overlapping intervals.\n\n    Args:\n    intervals (list[tuple[int, int]]): A list of intervals, where each interval is a tuple of two integers representing the start and end points.\n    weights (list[int]): A list of integers representing the weights of the intervals.\n\n    Returns:\n    list[tuple[tuple[int, int], int]]: A list of merged intervals with their updated weights.\n    \"\"\"\n    \n    # Combine intervals and weights into a list of tuples\n    interval_weights = list(zip(intervals, weights))\n    \n    # Sort the intervals by their start points\n    interval_weights.sort(key=lambda x: x[0][0])\n    \n    # Initialize the result list\n    merged_intervals = []\n    \n    # Check if the input lists are not empty\n    if interval_weights:\n        # Initialize the result list with the first interval\n        merged_intervals = [interval_weights[0]]\n        \n        # Iterate over the remaining intervals\n        for current_interval, current_weight in interval_weights[1:]:\n            # Get the last merged interval\n            last_merged_interval, last_merged_weight = merged_intervals[-1]\n            \n            # Check if the current interval overlaps with the last merged interval\n            if current_interval[0] <= last_merged_interval[1]:\n                # Update the last merged interval by merging it with the current interval\n                merged_intervals[-1] = ((last_merged_interval[0], max(last_merged_interval[1], current_interval[1])), max(last_merged_weight, current_weight))\n            else:\n                # Add the current interval to the result list\n                merged_intervals.append((current_interval, current_weight))\n    \n    return merged_intervals",
+      "difficulty": "medium",
+      "tags": [
+        "data structures"
+      ]
+    },
+    {
+      "id": "temporal_graph_disjoint_paths",
+      "description": "Given a temporal graph, where each edge has a time interval during which it is active, find the maximum number of disjoint paths between two given nodes. A path is considered disjoint if it does not share any edges with another path at the same time. The temporal graph is represented as a list of edges, where each edge is a tuple of (source node, target node, start time, end time). The goal is to find the maximum number of disjoint paths from the source node to the target node.",
+      "function_signature": "```python\ndef temporal_graph_disjoint_paths(edges: list[tuple[int, int, int, int]], source: int, target: int) -> int\n```",
+      "baseline_tests": [
+        "assert temporal_graph_disjoint_paths([(1, 2, 1, 3), (1, 2, 4, 6), (2, 3, 2, 5), (2, 3, 7, 8)], 1, 3) == 2",
+        "assert temporal_graph_disjoint_paths([(1, 2, 1, 2), (2, 3, 3, 4), (1, 3, 5, 6)], 1, 3) == 2",
+        "assert temporal_graph_disjoint_paths([(1, 2, 1, 10), (2, 3, 1, 10)], 1, 3) == 1",
+        "assert temporal_graph_disjoint_paths([(1, 2, 1, 2), (2, 3, 3, 4)], 1, 3) == 1",
+        "assert temporal_graph_disjoint_paths([(1, 2, 1, 2), (2, 3, 3, 4), (3, 1, 5, 6)], 1, 3) == 1"
+      ],
+      "reference_solution": "from typing import List, Tuple\n\ndef temporal_graph_disjoint_paths(edges: List[Tuple[int, int, int, int]], source: int, target: int) -> int:\n    \"\"\"\n    Find the maximum number of disjoint paths between two given nodes in a temporal graph.\n\n    Args:\n    edges: A list of edges, where each edge is a tuple of (source node, target node, start time, end time).\n    source: The source node.\n    target: The target node.\n\n    Returns:\n    The maximum number of disjoint paths from the source node to the target node.\n    \"\"\"\n    # Create a graph where each edge is associated with its time interval\n    graph = {}\n    for u, v, start, end in edges:\n        if u not in graph:\n            graph[u] = []\n        if v not in graph:\n            graph[v] = []\n        graph[u].append((v, start, end))\n\n    # Initialize the maximum number of disjoint paths\n    max_paths = 0\n\n    # Iterate over all possible time intervals\n    for start in range(min(edge[2] for edge in edges), max(edge[3] for edge in edges) + 1):\n        for end in range(start, max(edge[3] for edge in edges) + 1):\n            # Create a subgraph for the current time interval\n            subgraph = {}\n            for u, v, edge_start, edge_end in edges:\n                if edge_start <= start and end <= edge_end:\n                    if u not in subgraph:\n                        subgraph[u] = []\n                    if v not in subgraph:\n                        subgraph[v] = []\n                    subgraph[u].append(v)\n\n            # Find the maximum number of disjoint paths in the subgraph\n            max_paths_in_subgraph = 0\n            visited = set()\n            def dfs(node, path):\n                nonlocal max_paths_in_subgraph\n                if node == target:\n                    max_paths_in_subgraph += 1\n                    return\n                for neighbor in subgraph.get(node, []):\n                    if neighbor not in path:\n                        dfs(neighbor, path + [neighbor])\n\n            dfs(source, [source])\n            max_paths = max(max_paths, max_paths_in_subgraph)\n\n    return max_paths",
+      "difficulty": "medium",
+      "tags": [
+        "graph algorithms"
+      ]
+    },
+    {
+      "id": "optimal_resource_allocation",
+      "description": "Given a set of tasks with varying resource requirements and a budget constraint, allocate resources to maximize the total value of completed tasks. Each task can be partially allocated resources, and the value of the task is calculated as the minimum of the allocated resources and the task's resource requirement. The goal is to find the optimal allocation of resources to tasks to maximize the total value.",
+      "function_signature": "```python\ndef optimal_resource_allocation(tasks: list[tuple[int, int]], budget: int) -> int\n```",
+      "baseline_tests": [
+        "assert optimal_resource_allocation([(1, 10), (2, 5), (3, 8)], 10) == 18",
+        "assert optimal_resource_allocation([(5, 5), (5, 5), (5, 5)], 10) == 10",
+        "assert optimal_resource_allocation([(10, 10), (10, 10), (10, 10)], 5) == 0",
+        "assert optimal_resource_allocation([(1, 1), (1, 1), (1, 1)], 3) == 3",
+        "assert optimal_resource_allocation([], 10) == 0"
+      ],
+      "reference_solution": "def optimal_resource_allocation(tasks: list[tuple[int, int]], budget: int) -> int:\n    \"\"\"\n    Allocate resources to tasks to maximize the total value.\n\n    Args:\n    tasks (list[tuple[int, int]]): A list of tasks with their resource requirements and values.\n    budget (int): The total budget for resource allocation.\n\n    Returns:\n    int: The maximum total value of completed tasks.\n    \"\"\"\n\n    # Handle edge case where there are no tasks\n    if not tasks:\n        return 0\n\n    # Initialize a 2D array to store the maximum total value for each subproblem\n    dp = [[0] * (budget + 1) for _ in range(len(tasks) + 1)]\n\n    # Iterate over each task\n    for i in range(1, len(tasks) + 1):\n        # Iterate over each possible budget\n        for j in range(1, budget + 1):\n            # If the current task's resource requirement is greater than the current budget,\n            # skip this task and take the maximum total value from the previous tasks\n            if tasks[i - 1][0] > j:\n                dp[i][j] = dp[i - 1][j]\n            else:\n                # Calculate the maximum total value by considering two options:\n                # 1. Allocate resources to the current task\n                # 2. Skip the current task and take the maximum total value from the previous tasks\n                dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - tasks[i - 1][0]] + min(tasks[i - 1][0], j))\n\n    # The maximum total value is stored in the last cell of the 2D array\n    return dp[-1][-1]",
+      "difficulty": "medium",
+      "tags": [
+        "dynamic programming"
+      ]
+    }
+  ]
+}
