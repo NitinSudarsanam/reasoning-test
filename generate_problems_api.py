@@ -162,6 +162,14 @@ def parse_generated_problem(text: str) -> Dict:
     # Extract signature
     if "SIGNATURE:" in text and "TESTS:" in text:
         sig = text.split("SIGNATURE:")[1].split("TESTS:")[0].strip()
+        # Remove markdown code blocks
+        if "```python" in sig:
+            sig = sig.split("```python")[1].split("```")[0].strip()
+        elif "```" in sig:
+            sig = sig.split("```")[1].split("```")[0].strip()
+        # Ensure it ends with colon
+        if not sig.endswith(':'):
+            sig = sig + ':'
         problem['function_signature'] = sig
     else:
         problem['function_signature'] = "def solution():"

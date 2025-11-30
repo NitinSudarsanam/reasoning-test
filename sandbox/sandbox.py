@@ -54,12 +54,23 @@ class Sandbox:
                 f.write(code)
             
             # Prepare test file with imports
+            # Wrap raw assert statements in test functions if needed
+            if tests.strip() and not tests.strip().startswith('def test_'):
+                # Raw assert statements - wrap them
+                test_lines = [line.strip() for line in tests.split('\n') if line.strip()]
+                test_functions = []
+                for i, line in enumerate(test_lines):
+                    test_functions.append(f"def test_case_{i}():\n    {line}\n")
+                tests_wrapped = "\n".join(test_functions)
+            else:
+                tests_wrapped = tests
+            
             test_content = f"""
 import sys
 sys.path.insert(0, '{tmpdir}')
 from solution import *
 
-{tests}
+{tests_wrapped}
 """
             with open(test_file, 'w', encoding='utf-8') as f:
                 f.write(test_content)

@@ -146,17 +146,24 @@ import pytest
         id=5,
         name="Executable Code",
         description="Final Python implementation",
-        generator_prompt_template="""You are solving a coding problem. You've completed all reasoning stages. Now write the final Python code.
+        generator_prompt_template="""You are a Python expert. Complete this function with working code.
+
+Example of a complete function:
+def add_numbers(a: int, b: int) -> int:
+    result = a + b
+    return result
+
+Now implement this function:
+
+{function_signature}
+    pass  # Replace this with your implementation
 
 Problem: {problem}
 
-Complete Reasoning Chain:
-{previous_stages}
+Previous reasoning: {previous_stages}
 
-Write clean, executable Python code. Include the function signature and implementation.
-
-Python Code:
-```python""",
+Write the complete function with the implementation (replace 'pass' with actual code):
+""",
         discriminator_prompt_template="""You are generating test cases for a coding problem and solution.
 
 Problem: {problem}

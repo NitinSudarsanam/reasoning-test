@@ -1,17 +1,20 @@
 @echo off
-REM CPU-Optimized Benchmarking (30-40 minutes total)
+REM CPU-Optimized Benchmarking (30-40 minutes total) - AUTO MODE
 
 echo ==========================================
 echo CPU-OPTIMIZED ADVERSARIAL RL BENCHMARK
 echo ==========================================
 echo.
 echo This will take approximately 30-40 minutes
-echo You can use your computer for light tasks while this runs
+echo Running in automatic mode...
+echo.
+echo Activating conda environment...
+call conda activate reasoning
 echo.
 
 REM Configuration - Optimized for CPU speed
 set MODEL=Salesforce/codegen-350M-mono
-set PROBLEMS_FILE=data/custom_problems.json
+set PROBLEMS_FILE=data/function_problems.json
 set DEVICE=cpu
 set N_DISC_STEPS=2
 set N_GEN_STEPS=2
@@ -23,74 +26,14 @@ echo   Problems: %PROBLEMS_FILE%
 echo   Device: %DEVICE%
 echo   Training steps: %N_DISC_STEPS%-%N_GEN_STEPS%-%K_ALT_STEPS% (minimal for speed)
 echo.
-echo Estimated time breakdown:
-echo   1. Generate problems: ~1 min
-echo   2. Baseline eval: ~5 min
-echo   3. Training: ~20 min
-echo   4. Final eval: ~5 min
-echo   Total: ~30 min
-echo.
 
-pause
-
-REM Step 1: Generate custom problems
+REM Step 1: Generate custom problems (using pre-made for speed)
 echo ==========================================
 echo STEP 1/4: Generating Custom Problems
 echo ==========================================
-echo.
-echo Choose problem generation method:
-echo   1. Use pre-made problems (instant, good quality)
-echo   2. Generate with Groq API (FREE, excellent quality) - RECOMMENDED
-echo   3. Generate with GPT-4 API (best quality, requires paid API key)
-echo   4. Generate with Claude API (excellent quality, requires paid API key)
-echo.
-set /p CHOICE="Enter choice (1-4, default=2): "
-if "%CHOICE%"=="" set CHOICE=2
-
-if "%CHOICE%"=="1" goto premade
-if "%CHOICE%"=="2" goto groq
-if "%CHOICE%"=="3" goto openai
-if "%CHOICE%"=="4" goto anthropic
-goto premade
-
-:premade
 echo Using pre-made custom problems...
 python generate_custom_problems.py
 if errorlevel 1 goto error
-goto problems_done
-
-:groq
-echo Generating with Groq API (FREE)...
-echo Get free key at: https://console.groq.com/
-echo Make sure GROQ_API_KEY is set in your environment
-python generate_problems_api.py --provider groq --num-problems 5
-if errorlevel 1 (
-    echo Failed to generate with API, falling back to pre-made problems
-    python generate_custom_problems.py
-)
-goto problems_done
-
-:openai
-echo Generating with GPT-4 API...
-echo Make sure OPENAI_API_KEY is set in your environment
-python generate_problems_api.py --provider openai --num-problems 5
-if errorlevel 1 (
-    echo Failed to generate with API, falling back to pre-made problems
-    python generate_custom_problems.py
-)
-goto problems_done
-
-:anthropic
-echo Generating with Claude API...
-echo Make sure ANTHROPIC_API_KEY is set in your environment
-python generate_problems_api.py --provider anthropic --num-problems 5
-if errorlevel 1 (
-    echo Failed to generate with API, falling back to pre-made problems
-    python generate_custom_problems.py
-)
-goto problems_done
-
-:problems_done
 echo.
 
 REM Step 2: Baseline evaluation
@@ -110,7 +53,6 @@ echo STEP 3/4: Training with Adversarial RL
 echo ==========================================
 echo Time: ~20 minutes
 echo Training 5 problems across 5 stages...
-echo You can minimize this window and do other work
 echo.
 python run_training.py --generator-model "%MODEL%" --discriminator-model "%MODEL%" --problems-file "%PROBLEMS_FILE%" --device "%DEVICE%" --n-discriminator-steps %N_DISC_STEPS% --n-generator-steps %N_GEN_STEPS% --k-alternating-steps %K_ALT_STEPS% --checkpoint-dir checkpoints_cpu
 if errorlevel 1 goto error
@@ -141,7 +83,6 @@ echo   - checkpoints_cpu/
 echo.
 echo Open comparison_results.json to see improvement metrics!
 echo.
-pause
 goto end
 
 :error
@@ -149,7 +90,6 @@ echo.
 echo ERROR: Benchmarking failed!
 echo Check the error messages above
 echo.
-pause
 exit /b 1
 
 :end

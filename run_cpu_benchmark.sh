@@ -42,23 +42,32 @@ echo "=========================================="
 echo ""
 echo "Choose problem generation method:"
 echo "  1. Use pre-made problems (instant, good quality)"
-echo "  2. Generate with GPT-4 API (best quality, requires API key)"
-echo "  3. Generate with Claude API (excellent quality, requires API key)"
+echo "  2. Generate with Groq API (FREE, excellent quality) - RECOMMENDED"
+echo "  3. Generate with GPT-4 API (best quality, requires paid API key)"
+echo "  4. Generate with Claude API (excellent quality, requires paid API key)"
 echo ""
-read -p "Enter choice (1-3, default=1): " CHOICE
-CHOICE=${CHOICE:-1}
+read -p "Enter choice (1-4, default=2): " CHOICE
+CHOICE=${CHOICE:-2}
 
 if [ "$CHOICE" = "1" ]; then
     echo "Using pre-made custom problems..."
     python generate_custom_problems.py
 elif [ "$CHOICE" = "2" ]; then
+    echo "Generating with Groq API (FREE)..."
+    echo "Get free key at: https://console.groq.com/"
+    echo "Make sure GROQ_API_KEY is set in your environment"
+    python generate_problems_api.py --provider groq --num-problems 5 || {
+        echo "Failed to generate with API, falling back to pre-made problems"
+        python generate_custom_problems.py
+    }
+elif [ "$CHOICE" = "3" ]; then
     echo "Generating with GPT-4 API..."
     echo "Make sure OPENAI_API_KEY is set in your environment"
     python generate_problems_api.py --provider openai --num-problems 5 || {
         echo "Failed to generate with API, falling back to pre-made problems"
         python generate_custom_problems.py
     }
-elif [ "$CHOICE" = "3" ]; then
+elif [ "$CHOICE" = "4" ]; then
     echo "Generating with Claude API..."
     echo "Make sure ANTHROPIC_API_KEY is set in your environment"
     python generate_problems_api.py --provider anthropic --num-problems 5 || {

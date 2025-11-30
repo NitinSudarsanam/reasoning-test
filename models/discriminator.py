@@ -61,7 +61,7 @@ class LLMDiscriminator:
 Problem: {problem}
 
 Generated Code:
-{code}
+{stage_output}
 
 Generate {num_tests} challenging test cases as pytest functions. Make them adversarial - try to find edge cases and potential bugs.
 
@@ -73,7 +73,7 @@ import pytest
         
         prompt = prompt_template.format(
             problem=problem,
-            code=generator_code,
+            stage_output=generator_code,
             num_tests=num_tests
         )
         

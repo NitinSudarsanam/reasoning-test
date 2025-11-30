@@ -1,88 +1,90 @@
 {
   "problems": [
     {
-      "id": "alternating_sum_inversion",
-      "description": "Given an array of integers and a target sum, find the maximum length of a subarray that can be obtained by alternating between adding and subtracting elements from the array, such that the sum of the subarray is equal to the target sum. The array can be traversed in both forward and backward directions. \nThe goal is to find the longest subarray with the target sum by alternating between addition and subtraction.",
-      "function_signature": "def alternating_sum_inversion(arr: list[int], target_sum: int) -> int:",
+      "id": "circular_buffer_median",
+      "description": "Implement a circular buffer that maintains a sliding window of integers and \ncan efficiently compute the median of the current window. The buffer has a fixed capacity and \noverwrites the oldest element when full. Support operations: add(value), get_median(), and get_size().",
+      "function_signature": "class CircularBufferMedian:\n    def __init__(self, capacity: int):\n        pass\n    def add(self, value: int) -> None:\n        pass\n    def get_median(self) -> float:\n        pass\n    def get_size(self) -> int:\n        pass",
       "baseline_tests": [
-        "assert alternating_sum_inversion([1, 2, 3, 4, 5], 3) == 3",
-        "assert alternating_sum_inversion([-1, -2, -3, -4, -5], -3) == 3",
-        "assert alternating_sum_inversion([1, -1, 1, -1, 1], 0) == 5",
-        "assert alternating_sum_inversion([10, 20, 30, 40, 50], 60) == 2",
-        "assert alternating_sum_inversion([], 10) == 0"
+        "cb = CircularBufferMedian(3); cb.add(1); cb.add(2); cb.add(3); assert cb.get_median() == 2.0",
+        "cb = CircularBufferMedian(3); cb.add(5); assert cb.get_median() == 5.0",
+        "cb = CircularBufferMedian(2); cb.add(1); cb.add(2); cb.add(3); assert cb.get_median() == 2.5"
       ],
-      "reference_solution": "def alternating_sum_inversion(arr: list[int], target_sum: int) -> int:\n    \"\"\"\n    This function calculates the maximum length of a subarray that can be obtained by \n    alternating between adding and subtracting elements from the array, such that \n    the sum of the subarray is equal to the target sum.\n\n    Args:\n        arr (list[int]): The input array of integers.\n        target_sum (int): The target sum.\n\n    Returns:\n        int: The maximum length of the subarray with the target sum.\n    \"\"\"\n    if not arr:\n        return 0\n\n    max_length = 0\n    for i in range(len(arr)):\n        for j in range(i, len(arr)):\n            current_sum = 0\n            # Initialize the sign as 1 for addition\n            sign = 1\n            for k in range(i, j + 1):\n                current_sum += sign * arr[k]\n                # Alternate the sign\n                sign *= -1\n            if current_sum == target_sum:\n                max_length = max(max_length, j - i + 1)\n\n    # Check for the reverse direction\n    arr = arr[::-1]\n    for i in range(len(arr)):\n        for j in range(i, len(arr)):\n            current_sum = 0\n            sign = 1\n            for k in range(i, j + 1):\n                current_sum += sign * arr[k]\n                sign *= -1\n            if current_sum == target_sum:\n                max_length = max(max_length, j - i + 1)\n\n    return max_length",
+      "reference_solution": "class CircularBufferMedian:\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        self.buffer = []\n        self.index = 0\n    \n    def add(self, value: int) -> None:\n        if len(self.buffer) < self.capacity:\n            self.buffer.append(value)\n        else:\n            self.buffer[self.index] = value\n            self.index = (self.index + 1) % self.capacity\n    \n    def get_median(self) -> float:\n        sorted_buffer = sorted(self.buffer)\n        n = len(sorted_buffer)\n        if n % 2 == 1:\n            return float(sorted_buffer[n // 2])\n        else:\n            return (sorted_buffer[n // 2 - 1] + sorted_buffer[n // 2]) / 2.0\n    \n    def get_size(self) -> int:\n        return len(self.buffer)",
+      "difficulty": "medium",
+      "tags": [
+        "data-structures",
+        "sliding-window",
+        "median"
+      ]
+    },
+    {
+      "id": "bitwise_range_query",
+      "description": "Given an array of integers, implement a data structure that supports:\n1. update(index, value): Update array[index] to value\n2. query_xor(left, right): Return XOR of all elements from index left to right (inclusive)\n3. query_or(left, right): Return bitwise OR of all elements from index left to right (inclusive)",
+      "function_signature": "class BitwiseRangeQuery:\n    def __init__(self, arr: list[int]):\n        pass\n    def update(self, index: int, value: int) -> None:\n        pass\n    def query_xor(self, left: int, right: int) -> int:\n        pass\n    def query_or(self, left: int, right: int) -> int:\n        pass",
+      "baseline_tests": [
+        "brq = BitwiseRangeQuery([1, 2, 3, 4]); assert brq.query_xor(0, 3) == (1^2^3^4)",
+        "brq = BitwiseRangeQuery([5, 6, 7]); assert brq.query_or(0, 2) == (5|6|7)",
+        "brq = BitwiseRangeQuery([1, 2, 3]); brq.update(1, 5); assert brq.query_xor(0, 2) == (1^5^3)"
+      ],
+      "reference_solution": "class BitwiseRangeQuery:\n    def __init__(self, arr: list[int]):\n        self.arr = arr[:]\n    \n    def update(self, index: int, value: int) -> None:\n        self.arr[index] = value\n    \n    def query_xor(self, left: int, right: int) -> int:\n        result = 0\n        for i in range(left, right + 1):\n            result ^= self.arr[i]\n        return result\n    \n    def query_or(self, left: int, right: int) -> int:\n        result = 0\n        for i in range(left, right + 1):\n            result |= self.arr[i]\n        return result",
+      "difficulty": "medium",
+      "tags": [
+        "bitwise",
+        "range-query",
+        "data-structures"
+      ]
+    },
+    {
+      "id": "string_compression_with_frequency",
+      "description": "Implement a string compression algorithm that:\n1. Groups consecutive identical characters\n2. Replaces groups of 3+ chars with: char + count\n3. Keeps groups of 1-2 chars as-is\n4. Returns the shorter of original or compressed string\nExample: \"aaabbc\" -> \"a3bbc\" (7 chars -> 5 chars)\nExample: \"abc\" -> \"abc\" (no compression needed)",
+      "function_signature": "def compress_string(s: str) -> str:",
+      "baseline_tests": [
+        "assert compress_string('aaabbc') == 'a3bbc'",
+        "assert compress_string('abc') == 'abc'",
+        "assert compress_string('aabbcc') == 'aabbcc'",
+        "assert compress_string('aaaa') == 'a4'"
+      ],
+      "reference_solution": "def compress_string(s: str) -> str:\n    if not s:\n        return s\n    \n    compressed = []\n    count = 1\n    current = s[0]\n    \n    for i in range(1, len(s)):\n        if s[i] == current:\n            count += 1\n        else:\n            if count >= 3:\n                compressed.append(current + str(count))\n            else:\n                compressed.append(current * count)\n            current = s[i]\n            count = 1\n    \n    # Handle last group\n    if count >= 3:\n        compressed.append(current + str(count))\n    else:\n        compressed.append(current * count)\n    \n    compressed_str = ''.join(compressed)\n    return compressed_str if len(compressed_str) < len(s) else s",
       "difficulty": "easy",
       "tags": [
-        "array manipulation"
+        "string",
+        "compression",
+        "greedy"
       ]
     },
     {
-      "id": "string_window_repeats",
-      "description": "Given a string and a window size, find the maximum number of repeated substrings within a sliding window of that size. The string is considered as a circular sequence, meaning the window can wrap around to the beginning of the string. The repeated substrings must be non-overlapping within the window.\nThe function should return the maximum number of repeated substrings for any window of the given size.",
-      "function_signature": "```python\ndef string_window_repeats(s: str, window_size: int) -> int\n```",
+      "id": "matrix_spiral_sum",
+      "description": "Given an m x n matrix of integers, return the sum of all elements \ntraversed in spiral order (clockwise from outside to inside). \nExample: [[1,2,3],[4,5,6],[7,8,9]] -> 1+2+3+6+9+8+7+4+5 = 45",
+      "function_signature": "def spiral_sum(matrix: list[list[int]]) -> int:",
       "baseline_tests": [
-        "assert string_window_repeats(\"abcabc\", 6) == 2",
-        "assert string_window_repeats(\"aaaaaa\", 3) == 2",
-        "assert string_window_repeats(\"abcdef\", 3) == 1",
-        "assert string_window_repeats(\"ababab\", 4) == 1",
-        "assert string_window_repeats(\"\", 5) == 1"
+        "assert spiral_sum([[1,2,3],[4,5,6],[7,8,9]]) == 45",
+        "assert spiral_sum([[1,2],[3,4]]) == 10",
+        "assert spiral_sum([[1]]) == 1",
+        "assert spiral_sum([[1,2,3,4]]) == 10"
       ],
-      "reference_solution": "def string_window_repeats(s: str, window_size: int) -> int:\n    \"\"\"\n    This function calculates the maximum number of repeated substrings within a sliding window of a given size.\n    \n    Args:\n        s (str): The input string.\n        window_size (int): The size of the sliding window.\n    \n    Returns:\n        int: The maximum number of repeated substrings for any window of the given size.\n    \"\"\"\n    \n    if not s or window_size <= 0:\n        return 1\n    \n    max_repeats = 0\n    s += s  # Consider the string as a circular sequence\n    \n    for i in range(len(s) - window_size + 1):\n        window = s[i:i + window_size]\n        \n        # Initialize a dictionary to store the frequency of substrings\n        freq_dict = {}\n        \n        # Initialize the maximum length of repeated substrings\n        max_len = window_size // 2\n        \n        for length in range(1, max_len + 1):\n            for j in range(len(window) - length + 1):\n                substring = window[j:j + length]\n                \n                # If the substring is already in the dictionary, increment its count\n                if substring in freq_dict:\n                    freq_dict[substring] += 1\n                # Otherwise, add it to the dictionary with a count of 1\n                else:\n                    freq_dict[substring] = 1\n        \n        # Update the maximum number of repeated substrings\n        max_repeats = max(max_repeats, max(freq_dict.values(), default=1))\n    \n    return max_repeats",
-      "difficulty": "easy",
-      "tags": [
-        "string processing"
-      ]
-    },
-    {
-      "id": "merge_overlapping_intervals_with_custom_weight",
-      "description": "Given a list of intervals with custom weights, merge overlapping intervals and update their weights by taking the maximum weight of the overlapping intervals. The intervals are defined as tuples of two integers representing the start and end points, and the weights are integers. The goal is to return the merged intervals with their updated weights.",
-      "function_signature": "```python\ndef merge_overlapping_intervals(intervals: list[tuple[int, int]], weights: list[int]) -> list[tuple[tuple[int, int], int]]:\n```",
-      "baseline_tests": [
-        "assert merge_overlapping_intervals([(1, 3), (2, 4), (5, 7)], [1, 2, 3]) == [((1, 4), 2), ((5, 7), 3)]",
-        "assert merge_overlapping_intervals([(1, 2), (3, 4), (5, 6)], [1, 2, 3]) == [((1, 2), 1), ((3, 4), 2), ((5, 6), 3)]",
-        "assert merge_overlapping_intervals([(1, 10), (2, 5), (6, 8)], [1, 2, 3]) == [((1, 10), 2)]",
-        "assert merge_overlapping_intervals([(1, 1), (2, 2), (3, 3)], [1, 2, 3]) == [((1, 1), 1), ((2, 2), 2), ((3, 3), 3)]",
-        "assert merge_overlapping_intervals([], []) == []"
-      ],
-      "reference_solution": "def merge_overlapping_intervals(intervals: list[tuple[int, int]], weights: list[int]) -> list[tuple[tuple[int, int], int]]:\n    \"\"\"\n    Merge overlapping intervals and update their weights by taking the maximum weight of the overlapping intervals.\n\n    Args:\n    intervals (list[tuple[int, int]]): A list of intervals, where each interval is a tuple of two integers representing the start and end points.\n    weights (list[int]): A list of integers representing the weights of the intervals.\n\n    Returns:\n    list[tuple[tuple[int, int], int]]: A list of merged intervals with their updated weights.\n    \"\"\"\n    \n    # Combine intervals and weights into a list of tuples\n    interval_weights = list(zip(intervals, weights))\n    \n    # Sort the intervals by their start points\n    interval_weights.sort(key=lambda x: x[0][0])\n    \n    # Initialize the result list\n    merged_intervals = []\n    \n    # Check if the input lists are not empty\n    if interval_weights:\n        # Initialize the result list with the first interval\n        merged_intervals = [interval_weights[0]]\n        \n        # Iterate over the remaining intervals\n        for current_interval, current_weight in interval_weights[1:]:\n            # Get the last merged interval\n            last_merged_interval, last_merged_weight = merged_intervals[-1]\n            \n            # Check if the current interval overlaps with the last merged interval\n            if current_interval[0] <= last_merged_interval[1]:\n                # Update the last merged interval by merging it with the current interval\n                merged_intervals[-1] = ((last_merged_interval[0], max(last_merged_interval[1], current_interval[1])), max(last_merged_weight, current_weight))\n            else:\n                # Add the current interval to the result list\n                merged_intervals.append((current_interval, current_weight))\n    \n    return merged_intervals",
+      "reference_solution": "def spiral_sum(matrix: list[list[int]]) -> int:\n    if not matrix or not matrix[0]:\n        return 0\n    \n    total = 0\n    top, bottom = 0, len(matrix) - 1\n    left, right = 0, len(matrix[0]) - 1\n    \n    while top <= bottom and left <= right:\n        # Traverse right\n        for col in range(left, right + 1):\n            total += matrix[top][col]\n        top += 1\n        \n        # Traverse down\n        for row in range(top, bottom + 1):\n            total += matrix[row][right]\n        right -= 1\n        \n        # Traverse left\n        if top <= bottom:\n            for col in range(right, left - 1, -1):\n                total += matrix[bottom][col]\n            bottom -= 1\n        \n        # Traverse up\n        if left <= right:\n            for row in range(bottom, top - 1, -1):\n                total += matrix[row][left]\n            left += 1\n    \n    return total",
       "difficulty": "medium",
       "tags": [
-        "data structures"
+        "matrix",
+        "spiral",
+        "traversal"
       ]
     },
     {
-      "id": "temporal_graph_disjoint_paths",
-      "description": "Given a temporal graph, where each edge has a time interval during which it is active, find the maximum number of disjoint paths between two given nodes. A path is considered disjoint if it does not share any edges with another path at the same time. The temporal graph is represented as a list of edges, where each edge is a tuple of (source node, target node, start time, end time). The goal is to find the maximum number of disjoint paths from the source node to the target node.",
-      "function_signature": "```python\ndef temporal_graph_disjoint_paths(edges: list[tuple[int, int, int, int]], source: int, target: int) -> int\n```",
+      "id": "interval_merge_with_priority",
+      "description": "Given a list of intervals where each interval has [start, end, priority], \nmerge overlapping intervals. When intervals overlap, keep the one with higher priority. \nIf priorities are equal, merge them into one interval.\nExample: [[1,3,1], [2,4,2], [5,7,1]] -> [[1,2,1], [2,4,2], [5,7,1]]",
+      "function_signature": "def merge_intervals_priority(intervals: list[list[int]]) -> list[list[int]]:",
       "baseline_tests": [
-        "assert temporal_graph_disjoint_paths([(1, 2, 1, 3), (1, 2, 4, 6), (2, 3, 2, 5), (2, 3, 7, 8)], 1, 3) == 2",
-        "assert temporal_graph_disjoint_paths([(1, 2, 1, 2), (2, 3, 3, 4), (1, 3, 5, 6)], 1, 3) == 2",
-        "assert temporal_graph_disjoint_paths([(1, 2, 1, 10), (2, 3, 1, 10)], 1, 3) == 1",
-        "assert temporal_graph_disjoint_paths([(1, 2, 1, 2), (2, 3, 3, 4)], 1, 3) == 1",
-        "assert temporal_graph_disjoint_paths([(1, 2, 1, 2), (2, 3, 3, 4), (3, 1, 5, 6)], 1, 3) == 1"
+        "assert merge_intervals_priority([[1,3,1], [2,4,2]]) == [[1,2,1], [2,4,2]]",
+        "assert merge_intervals_priority([[1,3,1], [2,4,1]]) == [[1,4,1]]",
+        "assert merge_intervals_priority([[1,2,1]]) == [[1,2,1]]"
       ],
-      "reference_solution": "from typing import List, Tuple\n\ndef temporal_graph_disjoint_paths(edges: List[Tuple[int, int, int, int]], source: int, target: int) -> int:\n    \"\"\"\n    Find the maximum number of disjoint paths between two given nodes in a temporal graph.\n\n    Args:\n    edges: A list of edges, where each edge is a tuple of (source node, target node, start time, end time).\n    source: The source node.\n    target: The target node.\n\n    Returns:\n    The maximum number of disjoint paths from the source node to the target node.\n    \"\"\"\n    # Create a graph where each edge is associated with its time interval\n    graph = {}\n    for u, v, start, end in edges:\n        if u not in graph:\n            graph[u] = []\n        if v not in graph:\n            graph[v] = []\n        graph[u].append((v, start, end))\n\n    # Initialize the maximum number of disjoint paths\n    max_paths = 0\n\n    # Iterate over all possible time intervals\n    for start in range(min(edge[2] for edge in edges), max(edge[3] for edge in edges) + 1):\n        for end in range(start, max(edge[3] for edge in edges) + 1):\n            # Create a subgraph for the current time interval\n            subgraph = {}\n            for u, v, edge_start, edge_end in edges:\n                if edge_start <= start and end <= edge_end:\n                    if u not in subgraph:\n                        subgraph[u] = []\n                    if v not in subgraph:\n                        subgraph[v] = []\n                    subgraph[u].append(v)\n\n            # Find the maximum number of disjoint paths in the subgraph\n            max_paths_in_subgraph = 0\n            visited = set()\n            def dfs(node, path):\n                nonlocal max_paths_in_subgraph\n                if node == target:\n                    max_paths_in_subgraph += 1\n                    return\n                for neighbor in subgraph.get(node, []):\n                    if neighbor not in path:\n                        dfs(neighbor, path + [neighbor])\n\n            dfs(source, [source])\n            max_paths = max(max_paths, max_paths_in_subgraph)\n\n    return max_paths",
-      "difficulty": "medium",
+      "reference_solution": "def merge_intervals_priority(intervals: list[list[int]]) -> list[list[int]]:\n    if not intervals:\n        return []\n    \n    # Sort by start time\n    intervals.sort(key=lambda x: x[0])\n    result = [intervals[0]]\n    \n    for current in intervals[1:]:\n        last = result[-1]\n        \n        # Check for overlap\n        if current[0] <= last[1]:\n            # Overlapping\n            if current[2] > last[2]:\n                # Current has higher priority\n                if current[0] > last[0]:\n                    result[-1] = [last[0], current[0], last[2]]\n                    result.append(current)\n                else:\n                    result[-1] = current\n            elif current[2] == last[2]:\n                # Same priority, merge\n                result[-1] = [last[0], max(last[1], current[1]), last[2]]\n            # else: last has higher priority, keep it\n        else:\n            # No overlap\n            result.append(current)\n    \n    return result",
+      "difficulty": "hard",
       "tags": [
-        "graph algorithms"
-      ]
-    },
-    {
-      "id": "optimal_resource_allocation",
-      "description": "Given a set of tasks with varying resource requirements and a budget constraint, allocate resources to maximize the total value of completed tasks. Each task can be partially allocated resources, and the value of the task is calculated as the minimum of the allocated resources and the task's resource requirement. The goal is to find the optimal allocation of resources to tasks to maximize the total value.",
-      "function_signature": "```python\ndef optimal_resource_allocation(tasks: list[tuple[int, int]], budget: int) -> int\n```",
-      "baseline_tests": [
-        "assert optimal_resource_allocation([(1, 10), (2, 5), (3, 8)], 10) == 18",
-        "assert optimal_resource_allocation([(5, 5), (5, 5), (5, 5)], 10) == 10",
-        "assert optimal_resource_allocation([(10, 10), (10, 10), (10, 10)], 5) == 0",
-        "assert optimal_resource_allocation([(1, 1), (1, 1), (1, 1)], 3) == 3",
-        "assert optimal_resource_allocation([], 10) == 0"
-      ],
-      "reference_solution": "def optimal_resource_allocation(tasks: list[tuple[int, int]], budget: int) -> int:\n    \"\"\"\n    Allocate resources to tasks to maximize the total value.\n\n    Args:\n    tasks (list[tuple[int, int]]): A list of tasks with their resource requirements and values.\n    budget (int): The total budget for resource allocation.\n\n    Returns:\n    int: The maximum total value of completed tasks.\n    \"\"\"\n\n    # Handle edge case where there are no tasks\n    if not tasks:\n        return 0\n\n    # Initialize a 2D array to store the maximum total value for each subproblem\n    dp = [[0] * (budget + 1) for _ in range(len(tasks) + 1)]\n\n    # Iterate over each task\n    for i in range(1, len(tasks) + 1):\n        # Iterate over each possible budget\n        for j in range(1, budget + 1):\n            # If the current task's resource requirement is greater than the current budget,\n            # skip this task and take the maximum total value from the previous tasks\n            if tasks[i - 1][0] > j:\n                dp[i][j] = dp[i - 1][j]\n            else:\n                # Calculate the maximum total value by considering two options:\n                # 1. Allocate resources to the current task\n                # 2. Skip the current task and take the maximum total value from the previous tasks\n                dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - tasks[i - 1][0]] + min(tasks[i - 1][0], j))\n\n    # The maximum total value is stored in the last cell of the 2D array\n    return dp[-1][-1]",
-      "difficulty": "medium",
-      "tags": [
-        "dynamic programming"
+        "intervals",
+        "merge",
+        "priority"
       ]
     }
   ]

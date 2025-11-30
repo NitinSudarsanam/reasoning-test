@@ -316,7 +316,8 @@ class AdversarialTrainer:
                     prompt_template=stage.generator_prompt_template,
                     max_new_tokens=self.config.max_new_tokens,
                     temperature=self.config.temperature,
-                    top_p=self.config.top_p
+                    top_p=self.config.top_p,
+                    function_signature=problem.function_signature
                 )
             else:
                 # Intermediate reasoning stage
@@ -372,7 +373,8 @@ class AdversarialTrainer:
                         prompt_template=stage.generator_prompt_template,
                         max_new_tokens=self.config.max_new_tokens,
                         temperature=self.config.temperature,
-                        top_p=self.config.top_p
+                        top_p=self.config.top_p,
+                        function_signature=problem.function_signature
                     )
                 else:
                     output = self.generator.generate_stage_output(
@@ -394,7 +396,8 @@ class AdversarialTrainer:
                             prompt_template=stage.generator_prompt_template,
                             max_new_tokens=self.config.max_new_tokens,
                             temperature=self.config.temperature,
-                            top_p=self.config.top_p
+                            top_p=self.config.top_p,
+                            function_signature=problem.function_signature
                         )
                     else:
                         output = self.generator.generate_stage_output(

@@ -40,7 +40,8 @@ class LLMGenerator:
         prompt_template: str,
         max_new_tokens: int = 512,
         temperature: float = 0.7,
-        top_p: float = 0.9
+        top_p: float = 0.9,
+        function_signature: str = ""
     ) -> str:
         """Generate output for a specific reasoning stage.
         
@@ -52,6 +53,7 @@ class LLMGenerator:
             max_new_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             top_p: Nucleus sampling parameter
+            function_signature: Optional function/class signature for stage 5
             
         Returns:
             Generated output for this stage
@@ -62,11 +64,19 @@ class LLMGenerator:
             for i, stage in enumerate(previous_stages)
         ])
         
-        # Format prompt
-        prompt = prompt_template.format(
-            problem=problem,
-            previous_stages=previous_text if previous_stages else "None"
-        )
+        # Format prompt - handle function_signature placeholder
+        try:
+            prompt = prompt_template.format(
+                problem=problem,
+                previous_stages=previous_text if previous_stages else "None",
+                function_signature=function_signature if function_signature else ""
+            )
+        except KeyError:
+            # Template doesn't have function_signature placeholder
+            prompt = prompt_template.format(
+                problem=problem,
+                previous_stages=previous_text if previous_stages else "None"
+            )
         
         # Generate
         output = self._generate(prompt, max_new_tokens, temperature, top_p)
@@ -83,7 +93,8 @@ class LLMGenerator:
         prompt_template: str,
         max_new_tokens: int = 512,
         temperature: float = 0.7,
-        top_p: float = 0.9
+        top_p: float = 0.9,
+        function_signature: str = ""
     ) -> str:
         """Generate final executable code (stage 5).
         
@@ -94,6 +105,7 @@ class LLMGenerator:
             max_new_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             top_p: Nucleus sampling parameter
+            function_signature: Function/class signature to implement
             
         Returns:
             Generated Python code
@@ -105,11 +117,15 @@ class LLMGenerator:
             prompt_template=prompt_template,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
-            top_p=top_p
+            top_p=top_p,
+            function_signature=function_signature
         )
         
         # Extract code from markdown if present
         output = self._extract_code_from_markdown(output)
+        
+        # Additional cleaning for code
+        output = self._clean_generated_code(output)
         
         return output
     
@@ -215,18 +231,152 @@ class LLMGenerator:
         Returns:
             Extracted code or original text
         """
-        # Look for ```python ... ``` blocks
+        # Look for ```python ... ``` blocks (closed)
         pattern = r'```python\s*(.*?)\s*```'
         matches = re.findall(pattern, text, re.DOTALL)
         
         if matches:
             return matches[0].strip()
         
-        # Look for ``` ... ``` blocks
+        # Look for ``` ... ``` blocks (closed)
         pattern = r'```\s*(.*?)\s*```'
         matches = re.findall(pattern, text, re.DOTALL)
         
         if matches:
             return matches[0].strip()
         
+        # Look for unclosed ```python blocks (model didn't close it)
+        if '```python' in text:
+            # Extract everything after ```python
+            code = text.split('```python', 1)[1]
+            # Remove trailing ``` if present
+            code = code.split('```')[0]
+            return code.strip()
+        
+        # Look for unclosed ``` blocks
+        if '```' in text:
+            # Extract everything after first ```
+            code = text.split('```', 1)[1]
+            # Remove trailing ``` if present
+            code = code.split('```')[0]
+            return code.strip()
+        
         return text.strip()
+    
+    def _clean_generated_code(self, code: str) -> str:
+        """Clean generated code to ensure it's executable.
+        
+        Args:
+            code: Raw generated code
+            
+        Returns:
+            Cleaned code
+        """
+        # Remove any leading/trailing whitespace
+        code = code.strip()
+        
+        # Split into lines
+        lines = code.split('\n')
+        
+        # Strategy: Find the BEST function/class definition
+        # Look for one that has actual implementation (not just pass)
+        
+        # Find all function/class definitions
+        definitions = []
+        i = 0
+        while i < len(lines):
+            stripped = lines[i].strip()
+            if stripped.startswith(('def ', 'class ')):
+                # Found a definition, collect it
+                start = i
+                indent = len(lines[i]) - len(lines[i].lstrip())
+                i += 1
+                
+                # Collect all lines that belong to this definition
+                while i < len(lines):
+                    line = lines[i]
+                    stripped_line = line.strip()
+                    
+                    # Stop if we hit another top-level definition
+                    if stripped_line.startswith(('def ', 'class ')) and (len(line) - len(line.lstrip())) == indent:
+                        break
+                    
+                    # Stop if we hit explanatory text (not indented, not empty, not comment)
+                    if stripped_line and not line.startswith((' ', '\t')) and not stripped_line.startswith('#'):
+                        break
+                    
+                    i += 1
+                
+                definition_lines = lines[start:i]
+                
+                # Check if this definition has real implementation (not just pass)
+                has_implementation = False
+                for line in definition_lines[1:]:  # Skip the def/class line
+                    stripped = line.strip()
+                    if stripped and stripped != 'pass' and not stripped.startswith(('#', '"""', "'''")):
+                        # Check if it's actual code (not just docstring)
+                        if not (stripped.startswith('"""') or stripped.startswith("'''")):
+                            has_implementation = True
+                            break
+                
+                definitions.append({
+                    'lines': definition_lines,
+                    'has_implementation': has_implementation,
+                    'start': start
+                })
+            else:
+                i += 1
+        
+        # Choose the best definition
+        if not definitions:
+            # No definitions found, return original
+            return code
+        
+        # Prefer definitions with implementation
+        best_def = None
+        for d in definitions:
+            if d['has_implementation']:
+                best_def = d
+                break
+        
+        # If no implementation found, use the first definition
+        if not best_def:
+            best_def = definitions[0]
+        
+        # Clean the selected definition
+        cleaned_lines = []
+        skip_docstring = False
+        docstring_char = None
+        
+        for line in best_def['lines']:
+            stripped = line.strip()
+            
+            # Handle docstrings
+            if stripped.startswith('"""') or stripped.startswith("'''"):
+                if not skip_docstring:
+                    docstring_char = '"""' if stripped.startswith('"""') else "'''"
+                    skip_docstring = True
+                    if stripped.endswith(docstring_char) and len(stripped) > 3:
+                        skip_docstring = False
+                    continue
+                elif stripped.endswith(docstring_char):
+                    skip_docstring = False
+                    continue
+            
+            if skip_docstring:
+                continue
+            
+            # Skip lines with just pass if there's other code
+            if stripped == 'pass' and len(cleaned_lines) > 1:
+                # Check if there's real code after the def line
+                has_real_code = any(
+                    l.strip() and l.strip() != 'pass' and not l.strip().startswith('#')
+                    for l in cleaned_lines[1:]
+                )
+                if has_real_code:
+                    continue
+            
+            cleaned_lines.append(line)
+        
+        code = '\n'.join(cleaned_lines)
+        return code.strip()

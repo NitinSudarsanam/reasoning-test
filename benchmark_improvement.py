@@ -7,6 +7,7 @@ from typing import List, Dict
 
 from models.generator import LLMGenerator
 from sandbox.sandbox import Sandbox
+from sandbox.sandbox_simple import execute_tests_simple
 from data.problem_dataset import load_problems, Problem
 from reasoning.stages import get_stage
 from inference.inference_engine import InferenceEngine
@@ -46,12 +47,13 @@ def evaluate_baseline_model(
             reasoning_chain=[],
             prompt_template=stage_5.generator_prompt_template,
             max_new_tokens=512,
-            temperature=0.7
+            temperature=0.7,
+            function_signature=problem.function_signature
         )
         
-        # Test against baseline tests
+        # Test against baseline tests using simple executor
         test_code = "\n".join(problem.baseline_tests)
-        execution_result = sandbox.execute_tests(code, test_code)
+        execution_result = execute_tests_simple(code, test_code, timeout=sandbox.timeout)
         
         passed = execution_result.passed
         pass_rate = execution_result.num_passed / execution_result.num_total if execution_result.num_total > 0 else 0
@@ -125,24 +127,27 @@ def evaluate_trained_model(
         result = engine.solve_problem(
             problem_description=problem.description,
             function_signature=problem.function_signature,
-            execute_tests=True,
+            execute_tests=False,  # We'll use simple executor below
             test_cases=problem.baseline_tests,
             max_new_tokens=512,
             temperature=0.7
         )
         
-        passed = result.execution_result.passed if result.execution_result else False
-        pass_rate = (result.execution_result.num_passed / result.execution_result.num_total 
-                    if result.execution_result and result.execution_result.num_total > 0 else 0)
+        # Execute tests with simple executor for accurate counts
+        test_code = "\n".join(problem.baseline_tests)
+        execution_result = execute_tests_simple(result.generated_code, test_code, timeout=5)
+        
+        passed = execution_result.passed
+        pass_rate = execution_result.num_passed / execution_result.num_total if execution_result.num_total > 0 else 0
         
         results.append({
             'problem_id': problem.id,
             'passed': passed,
             'pass_rate': pass_rate,
-            'num_passed': result.execution_result.num_passed if result.execution_result else 0,
-            'num_total': result.execution_result.num_total if result.execution_result else 0,
+            'num_passed': execution_result.num_passed,
+            'num_total': execution_result.num_total,
             'inference_time': result.inference_time,
-            'errors': result.execution_result.errors[:3] if result.execution_result else []
+            'errors': execution_result.errors[:3]
         })
         
         status = "✓" if passed else "✗"
